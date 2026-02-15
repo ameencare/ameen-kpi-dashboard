@@ -1,14 +1,39 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useCallback } from 'react';
+import { DashboardProvider, useDashboard } from '@/contexts/DashboardContext';
+import DashboardLayout from '@/components/DashboardLayout';
+import KPIDashboard from '@/components/KPIDashboard';
+import StatisticsDashboard from '@/components/StatisticsDashboard';
+import FinancePlaceholder from '@/components/FinancePlaceholder';
 
-const Index = () => {
+function DashboardContent() {
+  const { section } = useDashboard();
+
+  const handleExportCSV = useCallback(() => {
+    // Trigger CSV download of current view
+    const content = 'data:text/csv;charset=utf-8,Export not implemented yet';
+    const link = document.createElement('a');
+    link.href = encodeURI(content);
+    link.download = `ameen-${section}-export.csv`;
+    link.click();
+  }, [section]);
+
+  const handleExportPDF = useCallback(() => {
+    window.print();
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <DashboardLayout onExportCSV={handleExportCSV} onExportPDF={handleExportPDF}>
+      {section === 'kpi' && <KPIDashboard />}
+      {section === 'statistics' && <StatisticsDashboard />}
+      {section === 'finance' && <FinancePlaceholder />}
+    </DashboardLayout>
   );
-};
+}
 
-export default Index;
+export default function Index() {
+  return (
+    <DashboardProvider>
+      <DashboardContent />
+    </DashboardProvider>
+  );
+}
