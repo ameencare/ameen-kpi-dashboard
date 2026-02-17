@@ -11,6 +11,7 @@ import purpleSaturdayLogo from '@/assets/channels/purple-saturday.png';
 import tiktokLogo from '@/assets/channels/tiktok.png';
 import whatsappLogo from '@/assets/channels/whatsapp.png';
 import xLogo from '@/assets/channels/x.png';
+import snapchatLogo from '@/assets/channels/snapchat.png';
 
 type ChannelVisual =
   | { type: 'logo'; src: string }
@@ -95,6 +96,7 @@ function getChannelVisual(name: string): ChannelVisual {
   if (lower === 'x' || lower === 'twitter') return { type: 'logo', src: xLogo };
   if (lower.includes('instagram') || lower === 'ig') return { type: 'logo', src: instagramLogo };
   if (lower.includes('tiktok') || lower.includes('tik tok')) return { type: 'logo', src: tiktokLogo };
+  if (lower.includes('snapchat') || lower.includes('snap')) return { type: 'logo', src: snapchatLogo };
   // Icon-based channels
   if (lower.includes('founder')) return { type: 'icon', render: SvgIcons.founder };
   if (lower.includes('sms')) return { type: 'icon', render: SvgIcons.sms };
