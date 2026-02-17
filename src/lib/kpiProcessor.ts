@@ -288,6 +288,159 @@ export async function fetchKPIData(periodType: PeriodType): Promise<KPIData> {
   };
 }
 
+// Custom comparison: user picks specific periods to compare
+interface CustomComparisonParams {
+  enabled: boolean;
+  periodType: PeriodType;
+  year1: number;
+  year2: number;
+  period1: number;
+  period2: number;
+}
+
+function getYearStartSunday(year: number): Date {
+  const jan1 = new Date(year, 0, 1);
+  const day = jan1.getDay();
+  const offset = day === 0 ? 0 : 7 - day;
+  return new Date(year, 0, 1 + offset);
+}
+
+function getCustomPeriodWeeks(
+  weekColumns: WeekData[],
+  periodType: PeriodType,
+  year: number,
+  period: number
+): WeekData[] {
+  const yearStart = getYearStartSunday(year);
+
+  if (periodType === 'yearly') {
+    // period is the year itself
+    const ys = getYearStartSunday(period);
+    const ye = new Date(ys.getTime() + 52 * 7 * 86400000);
+    return weekColumns.filter(w => w.date >= ys && w.date < ye);
+  }
+
+  if (periodType === 'weekly') {
+    // period = week number 1-52
+    const weekStart = new Date(yearStart.getTime() + (period - 1) * 7 * 86400000);
+    const weekEnd = new Date(weekStart.getTime() + 7 * 86400000);
+    return weekColumns.filter(w => w.date >= weekStart && w.date < weekEnd);
+  }
+
+  if (periodType === 'monthly') {
+    // period = month 1-12, each month = 4 weeks
+    const monthStart = new Date(yearStart.getTime() + (period - 1) * 4 * 7 * 86400000);
+    const monthEnd = new Date(monthStart.getTime() + 4 * 7 * 86400000);
+    return weekColumns.filter(w => w.date >= monthStart && w.date < monthEnd);
+  }
+
+  if (periodType === 'quarterly') {
+    // period = quarter 1-4, each quarter = 12 weeks
+    const qStart = new Date(yearStart.getTime() + (period - 1) * 12 * 7 * 86400000);
+    const qEnd = new Date(qStart.getTime() + 12 * 7 * 86400000);
+    return weekColumns.filter(w => w.date >= qStart && w.date < qEnd);
+  }
+
+  return [];
+}
+
+function formatCustomLabel(periodType: PeriodType, year: number, period: number): string {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  if (periodType === 'weekly') return `Week ${period}, ${year}`;
+  if (periodType === 'monthly') return `${months[period - 1]} ${year}`;
+  if (periodType === 'quarterly') return `Q${period} ${year}`;
+  return `${period}`;
+}
+
+export async function fetchKPIDataCustom(params: CustomComparisonParams): Promise<KPIData> {
+  const response = await fetch(KPI_CSV_URL);
+  const text = await response.text();
+  const parsed = Papa.parse(text, { header: false });
+  const rows = parsed.data as string[][];
+
+  if (rows.length < 2) throw new Error('No KPI data found');
+
+  const headers = rows[0];
+  const weekColumns: WeekData[] = [];
+  for (let i = 3; i < headers.length; i++) {
+    const d = parseWeekDate(headers[i]);
+    if (!isNaN(d.getTime())) {
+      weekColumns.push({ date: d, dateStr: headers[i], colIndex: i });
+    }
+  }
+
+  const currentWeeks = getCustomPeriodWeeks(weekColumns, params.periodType, params.year1, params.period1);
+  const previousWeeks = getCustomPeriodWeeks(weekColumns, params.periodType, params.year2, params.period2);
+
+  const currentPeriodLabel = formatCustomLabel(params.periodType, params.year1, params.period1);
+  const previousPeriodLabel = formatCustomLabel(params.periodType, params.year2, params.period2);
+
+  const metrics: KPIMetricData[] = [];
+  const metricsByName: Record<string, KPIMetricData> = {};
+
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    if (!row[0] || row[0].trim() === '') continue;
+
+    const name = row[0].trim();
+    const definition = row[1]?.trim() || '';
+    const populatedWeeks = getPopulatedWeeks(row, weekColumns);
+
+    if (populatedWeeks.length === 0) {
+      const m: KPIMetricData = {
+        name, definition, currentValue: 0, previousValue: 0,
+        delta: 0, percentChange: 0, valueType: 'number',
+        sparklineData: [], isPositiveGood: !INVERSE_METRICS.has(name),
+      };
+      metrics.push(m);
+      metricsByName[name] = m;
+      continue;
+    }
+
+    const sampleVal = row[populatedWeeks[0].colIndex];
+    const { type: valueType } = parseValue(sampleVal);
+    const isRate = valueType === 'percentage' || name.toLowerCase().includes('ratio') || name.toLowerCase().includes('per ');
+
+    const currWeeksForMetric = currentWeeks.filter(w => {
+      const val = row[w.colIndex];
+      return val && val.trim() !== '' && val.trim() !== 'ew';
+    });
+    const prevWeeksForMetric = previousWeeks.filter(w => {
+      const val = row[w.colIndex];
+      return val && val.trim() !== '' && val.trim() !== 'ew';
+    });
+
+    const currentValue = aggregateValues(row, currWeeksForMetric, isRate);
+    const previousValue = aggregateValues(row, prevWeeksForMetric, isRate);
+    const delta = currentValue - previousValue;
+    const percentChange = previousValue !== 0 ? ((delta / Math.abs(previousValue)) * 100) : (currentValue !== 0 ? 100 : 0);
+
+    const sparkWeeks = populatedWeeks.slice(-12);
+    const sparklineData = sparkWeeks.map(w => ({
+      week: w.dateStr,
+      value: parseValue(row[w.colIndex]).value || 0,
+    }));
+
+    const finalType = isRate ? (valueType === 'percentage' ? 'percentage' : 'ratio') : valueType;
+
+    const m: KPIMetricData = {
+      name, definition, currentValue, previousValue, delta, percentChange,
+      valueType: finalType as 'number' | 'percentage' | 'currency' | 'ratio',
+      sparklineData, isPositiveGood: !INVERSE_METRICS.has(name),
+    };
+    metrics.push(m);
+    metricsByName[name] = m;
+  }
+
+  return {
+    metrics,
+    metricsByName,
+    currentPeriodLabel,
+    previousPeriodLabel,
+    allWeekDates: weekColumns.map(w => w.dateStr),
+  };
+}
+
 export interface StatsRecord {
   phoneNumber: string;
   type: string;

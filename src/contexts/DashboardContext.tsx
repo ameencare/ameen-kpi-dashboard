@@ -4,6 +4,15 @@ export type Section = 'kpi' | 'statistics' | 'finance';
 export type PeriodType = 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 export type Currency = 'SAR' | 'USD';
 
+export interface CustomComparison {
+  enabled: boolean;
+  periodType: PeriodType;
+  year1: number;
+  year2: number;
+  period1: number; // week 1-52, month 1-12, quarter 1-4, or year
+  period2: number;
+}
+
 interface DashboardContextType {
   section: Section;
   setSection: (s: Section) => void;
@@ -24,6 +33,8 @@ interface DashboardContextType {
   formatValue: (value: number, type: 'number' | 'percentage' | 'currency' | 'ratio') => string;
   drilldownMetric: string | null;
   setDrilldownMetric: (m: string | null) => void;
+  customComparison: CustomComparison;
+  setCustomComparison: (c: CustomComparison) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType>(null!);
@@ -38,6 +49,14 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [refreshKey, setRefreshKey] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [drilldownMetric, setDrilldownMetric] = useState<string | null>(null);
+  const [customComparison, setCustomComparison] = useState<CustomComparison>({
+    enabled: false,
+    periodType: 'weekly',
+    year1: new Date().getFullYear(),
+    year2: new Date().getFullYear(),
+    period1: 1,
+    period2: 1,
+  });
 
   const toggleTheme = useCallback(() => {
     setIsDark(prev => {
@@ -78,6 +97,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       isDark, toggleTheme, refreshKey, triggerRefresh,
       lastUpdated, setLastUpdated, convertAmount, formatCurrency, formatValue,
       drilldownMetric, setDrilldownMetric,
+      customComparison, setCustomComparison,
     }}>
       {children}
     </DashboardContext.Provider>
