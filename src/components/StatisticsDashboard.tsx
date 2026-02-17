@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid, RadarChart, PolarGrid,
-  PolarAngleAxis, PolarRadiusAxis, Radar, AreaChart, Area, Treemap,
+  PolarAngleAxis, PolarRadiusAxis, Radar, AreaChart, Area,
   LineChart, Line,
 } from 'recharts';
+import ChannelTreemap from '@/components/charts/ChannelTreemap';
+import CityGeoMap from '@/components/charts/CityGeoMap';
 
 const CHART_COLORS = [
   'hsl(170,65%,36%)', 'hsl(207,72%,48%)', 'hsl(190,65%,42%)',
@@ -189,9 +191,7 @@ export default function StatisticsDashboard() {
             <DonutChart data={typeData} />
           </ChartCard>
           <ChartCard title="Channel Distribution">
-            {channelData.length > 0 ? (
-              <HBarChart data={channelData} />
-            ) : <p className="text-muted-foreground text-sm">No data</p>}
+            <ChannelTreemap data={channelData} />
           </ChartCard>
         </div>
       </div>
@@ -201,7 +201,7 @@ export default function StatisticsDashboard() {
         <h3 className="text-lg font-semibold text-foreground mb-3">Customer Demographics</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <ChartCard title="City Distribution">
-            <HBarChart data={cityData} />
+            <CityGeoMap data={cityData} />
           </ChartCard>
           <ChartCard title="Gender Distribution">
             <DonutChart data={genderData} />
