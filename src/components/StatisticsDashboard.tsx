@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import ChannelTreemap from '@/components/charts/ChannelTreemap';
 import CityGeoMap from '@/components/charts/CityGeoMap';
+import GenderDisplay from '@/components/charts/GenderDisplay';
 
 const CHART_COLORS = [
   'hsl(170,65%,36%)', 'hsl(207,72%,48%)', 'hsl(190,65%,42%)',
@@ -204,7 +205,7 @@ export default function StatisticsDashboard() {
             <CityGeoMap data={cityData} />
           </ChartCard>
           <ChartCard title="Gender Distribution">
-            <DonutChart data={genderData} />
+            <GenderDisplay data={genderData} />
           </ChartCard>
           <ChartCard title="Age Distribution">
             <VBarChart data={ageData} />
