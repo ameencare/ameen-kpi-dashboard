@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useDashboard, type PeriodType } from '@/contexts/DashboardContext';
-import { fetchKPIData, type KPIData, TOP_KPI_KEYS } from '@/lib/kpiProcessor';
+import { fetchKPIData, fetchKPIDataCustom, type KPIData, TOP_KPI_KEYS } from '@/lib/kpiProcessor';
 import KPICard from './KPICard';
 import KPIDrilldown from './KPIDrilldown';
+import CustomizationFilter from './CustomizationFilter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ const PERIOD_OPTIONS: { key: PeriodType; label: string }[] = [
 ];
 
 export default function KPIDashboard() {
-  const { periodType, setPeriodType, refreshKey, setLastUpdated, drilldownMetric, setDrilldownMetric } = useDashboard();
+  const { periodType, setPeriodType, refreshKey, setLastUpdated, drilldownMetric, setDrilldownMetric, customComparison } = useDashboard();
   const [data, setData] = useState<KPIData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +25,12 @@ export default function KPIDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const kpiData = await fetchKPIData(periodType);
+      let kpiData: KPIData;
+      if (customComparison.enabled) {
+        kpiData = await fetchKPIDataCustom(customComparison);
+      } else {
+        kpiData = await fetchKPIData(periodType);
+      }
       setData(kpiData);
       setLastUpdated(new Date());
     } catch (e) {
@@ -32,7 +38,7 @@ export default function KPIDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [periodType, setLastUpdated]);
+  }, [periodType, setLastUpdated, customComparison]);
 
   useEffect(() => {
     loadData();
@@ -51,22 +57,27 @@ export default function KPIDashboard() {
           <h2 className="text-2xl font-bold text-foreground">KPI Dashboard</h2>
           <p className="text-sm text-muted-foreground mt-0.5">Key performance indicators at a glance</p>
         </div>
-        <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
-          {PERIOD_OPTIONS.map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => setPeriodType(opt.key)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                periodType === opt.key
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+        {!customComparison.enabled && (
+          <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
+            {PERIOD_OPTIONS.map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setPeriodType(opt.key)}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
+                  periodType === opt.key
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Customization Filter */}
+      <CustomizationFilter />
 
       {/* Period Labels */}
       {data && !loading && (
@@ -129,7 +140,6 @@ export default function KPIDashboard() {
     </div>
   );
 }
-
 // Export data getter for CSV export
 export function getKPIExportData(data: KPIData | null): string {
   if (!data) return '';
