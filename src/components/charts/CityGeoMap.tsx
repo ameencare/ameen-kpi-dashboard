@@ -1,41 +1,43 @@
 import { useMemo, useState } from 'react';
 import { MapPin } from 'lucide-react';
+import saudiMapBg from '@/assets/saudi-map.jpg';
 
-// Saudi Arabia city approximate coordinates (normalized to SVG viewBox 0-500)
+// City coordinates mapped to percentage positions on the uploaded map image
 const CITY_COORDS: Record<string, { x: number; y: number }> = {
-  'riyadh': { x: 300, y: 260 },
-  'jeddah': { x: 155, y: 270 },
-  'mecca': { x: 160, y: 285 },
-  'makkah': { x: 160, y: 285 },
-  'medina': { x: 175, y: 215 },
-  'madinah': { x: 175, y: 215 },
-  'dammam': { x: 370, y: 220 },
-  'khobar': { x: 375, y: 225 },
-  'al khobar': { x: 375, y: 225 },
-  'dhahran': { x: 373, y: 222 },
-  'tabuk': { x: 140, y: 155 },
-  'abha': { x: 195, y: 340 },
-  'taif': { x: 175, y: 295 },
-  'hail': { x: 245, y: 180 },
-  'najran': { x: 235, y: 360 },
-  'jubail': { x: 365, y: 210 },
-  'yanbu': { x: 150, y: 235 },
-  'khamis mushait': { x: 200, y: 345 },
-  'buraidah': { x: 270, y: 210 },
-  'qassim': { x: 270, y: 210 },
-  'al ahsa': { x: 360, y: 240 },
-  'hofuf': { x: 360, y: 245 },
-  'jazan': { x: 185, y: 370 },
-  'jizan': { x: 185, y: 370 },
-  'al baha': { x: 185, y: 320 },
-  'arar': { x: 250, y: 130 },
-  'sakaka': { x: 220, y: 140 },
-  'bisha': { x: 210, y: 330 },
-  'wadi al-dawasir': { x: 265, y: 320 },
-  'al qatif': { x: 370, y: 218 },
-  'unaizah': { x: 275, y: 215 },
-  'rabigh': { x: 150, y: 250 },
-  'al kharj': { x: 310, y: 275 },
+  'riyadh': { x: 55, y: 45 },
+  'jeddah': { x: 27, y: 52 },
+  'mecca': { x: 28, y: 57 },
+  'makkah': { x: 28, y: 57 },
+  'medina': { x: 30, y: 40 },
+  'madinah': { x: 30, y: 40 },
+  'dammam': { x: 78, y: 33 },
+  'khobar': { x: 80, y: 35 },
+  'al khobar': { x: 80, y: 35 },
+  'dhahran': { x: 79, y: 34 },
+  'tabuk': { x: 22, y: 25 },
+  'abha': { x: 33, y: 76 },
+  'taif': { x: 30, y: 58 },
+  'hail': { x: 42, y: 28 },
+  'najran': { x: 52, y: 82 },
+  'jubail': { x: 76, y: 30 },
+  'yanbu': { x: 24, y: 42 },
+  'khamis mushait': { x: 34, y: 77 },
+  'buraidah': { x: 48, y: 32 },
+  'qassim': { x: 48, y: 32 },
+  'al ahsa': { x: 74, y: 42 },
+  'hofuf': { x: 74, y: 43 },
+  'jazan': { x: 30, y: 85 },
+  'jizan': { x: 30, y: 85 },
+  'al baha': { x: 31, y: 68 },
+  'arar': { x: 48, y: 10 },
+  'sakaka': { x: 38, y: 14 },
+  'bisha': { x: 36, y: 72 },
+  'wadi al-dawasir': { x: 48, y: 70 },
+  'al qatif': { x: 77, y: 32 },
+  'unaizah': { x: 49, y: 34 },
+  'rabigh': { x: 25, y: 48 },
+  'al kharj': { x: 58, y: 50 },
+  'eastern province': { x: 78, y: 55 },
 };
 
 function findCityCoords(name: string): { x: number; y: number } | null {
@@ -56,18 +58,12 @@ export default function CityGeoMap({ data }: CityGeoMapProps) {
   const maxValue = useMemo(() => Math.max(...data.map(d => d.value), 1), [data]);
 
   const mappedCities = useMemo(() => {
-    return data.map((d, i) => {
+    let fallbackIdx = 0;
+    return data.map((d) => {
       const coords = findCityCoords(d.name);
-      // Fallback: distribute unknown cities in a grid
-      const fallback = {
-        x: 100 + (i % 5) * 70,
-        y: 380 + Math.floor(i / 5) * 30,
-      };
-      return {
-        ...d,
-        coords: coords || fallback,
-        hasCoords: !!coords,
-      };
+      const fallback = { x: 10 + (fallbackIdx % 4) * 20, y: 90 + Math.floor(fallbackIdx / 4) * 5 };
+      if (!coords) fallbackIdx++;
+      return { ...d, coords: coords || fallback, hasCoords: !!coords };
     });
   }, [data]);
 
@@ -76,123 +72,77 @@ export default function CityGeoMap({ data }: CityGeoMapProps) {
   }
 
   return (
-    <div className="h-72 relative">
-      <svg viewBox="0 0 500 420" className="w-full h-full" style={{ fontFamily: 'inherit' }}>
-        {/* Saudi Arabia simplified outline */}
-        <path
-          d="M120,130 L160,110 L200,105 L230,100 L270,105 L300,115 L340,130 L380,155 
-             L400,180 L410,210 L400,240 L390,260 L380,280 L370,300 
-             L350,310 L330,300 L310,310 L290,330 L270,350 L250,370 
-             L230,380 L210,375 L190,370 L175,360 L165,340 L160,320 
-             L155,305 L145,290 L140,270 L135,250 L130,235 L125,215 
-             L120,195 L115,170 L118,150 Z"
-          fill="hsl(var(--muted))"
-          stroke="hsl(var(--border))"
-          strokeWidth={1.5}
-          opacity={0.5}
-        />
+    <div className="h-80 relative rounded-lg overflow-hidden bg-muted/30">
+      {/* Map background */}
+      <img
+        src={saudiMapBg}
+        alt="Saudi Arabia Map"
+        className="absolute inset-0 w-full h-full object-contain opacity-70 dark:opacity-50 dark:invert-[0.15]"
+        draggable={false}
+      />
 
-        {/* City pins */}
-        {mappedCities.map((city) => {
-          const size = 6 + (city.value / maxValue) * 14;
-          const isHovered = hoveredCity === city.name;
+      {/* Pins overlay */}
+      {mappedCities.map((city) => {
+        const size = 10 + (city.value / maxValue) * 18;
+        const isHovered = hoveredCity === city.name;
 
-          return (
-            <g
-              key={city.name}
-              onMouseEnter={() => setHoveredCity(city.name)}
-              onMouseLeave={() => setHoveredCity(null)}
-              style={{ cursor: 'pointer' }}
+        return (
+          <div
+            key={city.name}
+            className="absolute group"
+            style={{
+              left: `${city.coords.x}%`,
+              top: `${city.coords.y}%`,
+              transform: 'translate(-50%, -50%)',
+              zIndex: isHovered ? 50 : 10,
+            }}
+            onMouseEnter={() => setHoveredCity(city.name)}
+            onMouseLeave={() => setHoveredCity(null)}
+          >
+            {/* Glow ring */}
+            <div
+              className="absolute rounded-full bg-primary/20 transition-all duration-200"
+              style={{
+                width: size + 12,
+                height: size + 12,
+                top: -(size + 12) / 2,
+                left: -(size + 12) / 2 + size / 2,
+                opacity: isHovered ? 0.5 : 0.2,
+              }}
+            />
+            {/* Pin dot */}
+            <div
+              className="rounded-full bg-primary border-2 border-background shadow-md transition-all duration-200 flex items-center justify-center cursor-pointer"
+              style={{
+                width: size,
+                height: size,
+                opacity: isHovered ? 1 : 0.85,
+                transform: isHovered ? 'scale(1.2)' : 'scale(1)',
+              }}
             >
-              {/* Pin glow */}
-              <circle
-                cx={city.coords.x}
-                cy={city.coords.y}
-                r={size + 4}
-                fill="hsl(var(--primary))"
-                opacity={isHovered ? 0.25 : 0.1}
-                className="transition-all duration-200"
-              />
-              {/* Pin circle */}
-              <circle
-                cx={city.coords.x}
-                cy={city.coords.y}
-                r={size}
-                fill="hsl(var(--primary))"
-                stroke="hsl(var(--background))"
-                strokeWidth={2}
-                opacity={isHovered ? 1 : 0.8}
-                className="transition-all duration-200"
-              />
-              {/* Value inside */}
-              {size > 10 && (
-                <text
-                  x={city.coords.x}
-                  y={city.coords.y + 1}
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fill="hsl(var(--primary-foreground))"
-                  fontSize={Math.max(7, size * 0.6)}
-                  fontWeight={700}
-                >
+              {size > 16 && (
+                <span className="text-primary-foreground font-bold" style={{ fontSize: Math.max(7, size * 0.4) }}>
                   {city.value}
-                </text>
+                </span>
               )}
-              {/* City label */}
-              <text
-                x={city.coords.x}
-                y={city.coords.y - size - 5}
-                textAnchor="middle"
-                fill="hsl(var(--foreground))"
-                fontSize={isHovered ? 11 : 9}
-                fontWeight={isHovered ? 700 : 500}
-                opacity={isHovered ? 1 : 0.7}
-                className="transition-all duration-200"
-              >
-                {city.name}
-              </text>
+            </div>
 
-              {/* Tooltip on hover */}
-              {isHovered && (
-                <g>
-                  <rect
-                    x={city.coords.x + size + 6}
-                    y={city.coords.y - 18}
-                    width={Math.max(80, city.name.length * 7 + 40)}
-                    height={36}
-                    rx={6}
-                    fill="hsl(var(--card))"
-                    stroke="hsl(var(--border))"
-                    strokeWidth={1}
-                  />
-                  <text
-                    x={city.coords.x + size + 14}
-                    y={city.coords.y - 4}
-                    fill="hsl(var(--foreground))"
-                    fontSize={10}
-                    fontWeight={600}
-                  >
-                    {city.name}
-                  </text>
-                  <text
-                    x={city.coords.x + size + 14}
-                    y={city.coords.y + 10}
-                    fill="hsl(var(--muted-foreground))"
-                    fontSize={9}
-                  >
-                    {city.value} records
-                  </text>
-                </g>
-              )}
-            </g>
-          );
-        })}
-      </svg>
+            {/* Tooltip */}
+            {isHovered && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-card border border-border shadow-lg whitespace-nowrap pointer-events-none animate-in fade-in-0 zoom-in-95 duration-150">
+                <p className="text-xs font-semibold text-foreground">{city.name}</p>
+                <p className="text-[10px] text-muted-foreground">{city.value} records</p>
+                <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-card border-r border-b border-border rotate-45 -mt-1" />
+              </div>
+            )}
+          </div>
+        );
+      })}
 
       {/* Legend */}
-      <div className="absolute bottom-1 left-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+      <div className="absolute bottom-2 left-2 flex items-center gap-1.5 text-[10px] text-muted-foreground bg-background/70 backdrop-blur-sm rounded px-2 py-1">
         <MapPin className="h-3 w-3 text-primary" />
-        <span>Size = volume</span>
+        <span>Pin size = volume</span>
       </div>
     </div>
   );
