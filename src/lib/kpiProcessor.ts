@@ -73,6 +73,7 @@ export const DRILLDOWN_MAP: Record<string, string[]> = {
     'Ameeners compensation', 'Ameeners incentives', 'Ameeners fines',
     'Refund amounts', "Ameeners' receivables of refund", 'Refunded amounts',
     '#Undelivered sessions', "Patients' compensations",
+    "New ameeners' receivables",
   ],
   "New ameeners' receivables": [],
   '#Active Partenerships': [
