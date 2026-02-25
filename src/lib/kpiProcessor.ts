@@ -29,6 +29,7 @@ export const TOP_KPI_KEYS = [
   '#Completed sessions',
   '#Active ameeners',
   'Gross weekly revenue',
+  "New ameeners' receivables",
   '#Active Partenerships',
 ];
 
@@ -73,6 +74,7 @@ export const DRILLDOWN_MAP: Record<string, string[]> = {
     'Refund amounts', "Ameeners' receivables of refund", 'Refunded amounts',
     '#Undelivered sessions', "Patients' compensations",
   ],
+  "New ameeners' receivables": [],
   '#Active Partenerships': [
     '#New active Partnerships', '#Reactivated Partnerships',
   ],
@@ -83,6 +85,7 @@ export const KPI_ICONS: Record<string, string> = {
   '#Completed sessions': '✅',
   '#Active ameeners': '🩺',
   'Gross weekly revenue': '💰',
+  "New ameeners' receivables": '💵',
   '#Active Partenerships': '🤝',
 };
 
