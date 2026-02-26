@@ -109,8 +109,8 @@ export default function KPIDashboard() {
 
       {/* Loading Skeleton */}
       {loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-border bg-card p-5 space-y-3">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-8 w-20" />
@@ -123,7 +123,7 @@ export default function KPIDashboard() {
 
       {/* Top 5 KPI Cards */}
       {!loading && data && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {TOP_KPI_KEYS.map(key => {
             const metric = data.metricsByName[key];
             if (!metric) return null;

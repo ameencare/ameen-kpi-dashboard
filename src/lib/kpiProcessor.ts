@@ -29,7 +29,6 @@ export const TOP_KPI_KEYS = [
   '#Completed sessions',
   '#Active ameeners',
   'Gross weekly revenue',
-  "New ameeners' receivables",
   '#Active Partenerships',
 ];
 
