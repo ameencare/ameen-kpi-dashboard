@@ -65,6 +65,7 @@ export const DRILLDOWN_MAP: Record<string, string[]> = {
   'Gross weekly revenue': [
     'Expected collections', 'B-C revenue', 'B-B revenue', 'B-B-C revenue',
     'Ex.sessions revenue', 'New TTT plans revenue', 'Renew TTT plans revenue',
+    "New ameeners' receivables",
     'TTT plan approval Rate', '#New TTT plans', "#New TTT plans' sessions",
     '#Renew TTT plans', "#Renew TTT plans' sessions", 'Sessions per TTT plan',
     "Total ameeners' receivables", "Expected ameeners' receivables",
@@ -72,7 +73,6 @@ export const DRILLDOWN_MAP: Record<string, string[]> = {
     'Ameeners compensation', 'Ameeners incentives', 'Ameeners fines',
     'Refund amounts', "Ameeners' receivables of refund", 'Refunded amounts',
     '#Undelivered sessions', "Patients' compensations",
-    "New ameeners' receivables",
   ],
   "New ameeners' receivables": [],
   '#Active Partenerships': [
